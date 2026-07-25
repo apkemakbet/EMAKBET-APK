@@ -1,0 +1,249 @@
+==================================================
+  EMAKBET — APK + WORKER PANEL
+  Kembaran TOKO123, semua fix terbaru sudah masuk
+==================================================
+
+⚠️ PENTING: URUTANNYA HARUS BENAR
+Worker DULU (biar dapat URL), baru APK.
+Kalau kebalik, APK gak bisa nyambung ke worker.
+
+
+==================================================
+  RINGKASAN: TINGGAL 2 HAL YANG HARUS LU ISI
+==================================================
+Cari kata "GANTI" di file-file ini:
+
+1. URL WORKER  -> MainActivity.java baris 58
+   Sekarang : https://GANTI-URL-WORKER-EMAKBET.workers.dev
+   Isi dgn  : URL worker EmakBet lu (dapat setelah deploy worker)
+
+2. LINK CUTT.LY -> SUDAH DIISI ✅
+   https://cutt.ly/EmakBet_PastiJP
+   (sudah terpasang di MainActivity.java + worker_emakbet.js)
+
+3. USERNAME GITHUB -> worker_emakbet.js (GITHUB_OWNER)
+   Sekarang : GANTI_USERNAME_GITHUB
+   Isi dgn  : username GitHub baru lu
+
+
+==================================================
+  LANGKAH 1: BIKIN AKUN BARU
+==================================================
+1. Gmail baru
+2. GitHub baru (login pakai Gmail itu)
+3. Cloudflare baru (login pakai Gmail itu)
+4. Firebase baru (login pakai Gmail itu)
+
+Catat semua password di tempat aman.
+
+
+==================================================
+  LANGKAH 2: FIREBASE (buat push notif)
+==================================================
+1. console.firebase.google.com -> Add project
+   Nama bebas, misal: emakbet-apk
+2. Setelah jadi -> klik ikon Android (Add app)
+3. Android package name: com.emakbet.app
+   ⚠️ HARUS PERSIS INI, jangan diubah! Kalau beda, notif gak jalan.
+4. Register app -> Download google-services.json
+   -> SIMPAN, nanti dipakai di GitHub Secret
+5. Project Settings (gerigi) -> Service accounts
+   -> Generate new private key -> download file .json
+   -> SIMPAN, nanti dipakai di Cloudflare
+
+
+==================================================
+  LANGKAH 3: CLOUDFLARE WORKER (kerjakan DULU!)
+==================================================
+A. BIKIN WORKER
+1. dash.cloudflare.com -> Workers & Pages -> Create
+2. Kasih nama, misal: notif
+   (URL jadinya: https://notif.NAMA-AKUN.workers.dev)
+3. Deploy (pakai template kosong dulu)
+
+B. PASANG KODE
+4. Klik worker -> Edit code
+5. Buka worker_emakbet.js pakai NOTEPAD (JANGAN browser!)
+6. Ctrl+A -> Ctrl+C
+7. Di editor Cloudflare: Ctrl+A -> Delete -> Ctrl+V
+8. SCROLL ke paling bawah, PASTIKAN baris terakhir = }
+9. Save and Deploy
+
+C. BIKIN DATABASE D1
+10. Workers & Pages -> D1 SQL Database -> Create
+11. Nama: emakbetapk -> Create
+12. Masuk ke database -> Console
+13. Buka schema.sql pakai Notepad, ketik/paste isinya
+    ⚠️ JANGAN ada kata "sql" di depan
+    ⚠️ JANGAN sertakan baris komentar (yang ada tanda --)
+    Jalankan satu per satu (Enter tiap statement)
+14. Ulangi buat daily_table.sql
+
+D. SAMBUNGKAN DATABASE KE WORKER
+15. Balik ke worker -> Settings -> Bindings -> Add
+16. Pilih D1 database
+    Variable name: DB
+    Database: emakbetapk
+17. Save
+
+E. PASANG KUNCI FIREBASE
+18. Worker -> Settings -> Variables and Secrets -> Add
+    Type   : Secret
+    Name   : FIREBASE_SA_JSON
+    Value  : isi file service-account.json (dari Langkah 2 no.5)
+             Copy SELURUHNYA dari { sampai }
+19. Save
+
+F. PASANG KUNCI LOGIN PANEL (TOTP)
+20. Siapkan secret base32 (huruf A-Z + angka 2-7, 32 karakter)
+    Contoh: JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP
+21. Worker -> Settings -> Variables and Secrets -> Add
+    Type   : Secret
+    Name   : TOTP_SECRET
+    Value  : secret tadi
+22. Di HP: Google Authenticator -> + -> Enter setup key
+    Account: EmakBet Panel
+    Key    : secret yang SAMA
+23. Save
+
+G. CATAT URL WORKER
+24. Lihat URL worker lu di halaman worker, contoh:
+    https://notif.emakbet.workers.dev
+    ⚠️ CATAT URL INI, dipakai di Langkah 4!
+
+H. TES WORKER
+25. Buka URL worker di browser -> harusnya muncul halaman login TOTP
+26. Buka URL + /api/notif-check -> cek Firebase siap atau belum
+
+
+==================================================
+  LANGKAH 4: ISI URL WORKER KE APK  ⭐ PENTING
+==================================================
+1. Buka MainActivity.java pakai NOTEPAD
+2. Cari baris 58:
+     public static final String API_BASE = "https://GANTI-URL-WORKER-EMAKBET.workers.dev";
+3. Ganti jadi URL worker lu (dari Langkah 3 no.24):
+     public static final String API_BASE = "https://notif.emakbet.workers.dev";
+
+   ⚠️ JANGAN pakai garis miring di akhir!
+   BENAR : "https://notif.emakbet.workers.dev"
+   SALAH : "https://notif.emakbet.workers.dev/"
+
+4. Baris 62 (FALLBACK_URL) SUDAH terisi cutt.ly EmakBet, tidak perlu diubah
+5. SIMPAN file
+
+
+==================================================
+  LANGKAH 5: BIKIN KEYSTORE (buat tanda tangan APK)
+==================================================
+Di komputer (perlu Java/JDK terpasang), buka CMD:
+
+  keytool -genkey -v -keystore emakbet.jks -keyalg RSA -keysize 2048 -validity 10000 -alias emakbet
+
+Isi password (CATAT!), nama, kota, dll.
+
+Ubah ke base64:
+  Windows PowerShell:
+    [Convert]::ToBase64String([IO.File]::ReadAllBytes("emakbet.jks")) > keystore_base64.txt
+
+Isi keystore_base64.txt -> dipakai di GitHub Secret
+
+
+==================================================
+  LANGKAH 6: GITHUB REPO
+==================================================
+A. BIKIN REPO
+1. github.com -> New repository
+2. Nama: EmakBet-APK
+3. Public atau Private (bebas) -> Create
+
+B. UPLOAD FILE
+4. Upload SEMUA isi folder "1_UPLOAD_KE_GITHUB"
+   Struktur folder sudah benar, upload apa adanya.
+   (Bisa drag-drop folder, atau pakai "Add file > Upload files")
+
+C. PASANG SECRETS
+5. Settings -> Secrets and variables -> Actions -> New secret
+   Bikin 5 secret ini:
+
+   KEYSTORE_BASE64      = isi keystore_base64.txt
+   KEYSTORE_PASSWORD    = password keystore lu
+   KEY_ALIAS            = emakbet
+   KEY_PASSWORD         = password key lu
+   GOOGLE_SERVICES_JSON = isi file google-services.json (dari Firebase)
+
+
+==================================================
+  LANGKAH 7: BUILD APK
+==================================================
+CARA A - Manual (hasil masuk Artifacts):
+1. Actions -> Build EMAKBET APK -> Run workflow
+2. Tunggu selesai (centang hijau)
+3. Download dari bagian Artifacts
+
+CARA B - Lewat Tag (hasil masuk RELEASES, lebih bagus):
+1. Code -> Releases -> Create a new release
+2. Choose a tag -> ketik v1.0 -> Create new tag
+3. Publish release
+4. Workflow jalan otomatis, APK masuk Releases
+
+⚠️ Link download APK (dari Releases):
+   https://github.com/USERNAME/EmakBet-APK/releases/latest/download/EmakBet.apk
+
+   Nama file HARUS persis "EmakBet.apk"
+
+
+==================================================
+  LANGKAH 8: TES SEMUANYA
+==================================================
+1. Install APK di HP
+2. Buka APK -> harusnya buka website EmakBet
+3. Buka panel worker (URL worker lu) -> login pakai Google Authenticator
+4. Cek Total Download -> harusnya naik jadi 1
+5. Push Notif -> isi judul & pesan -> Kirim
+6. Cek HP -> notif muncul dengan logo EmakBet berwarna
+
+Kalau notif gak muncul:
+- Buka URL-worker/api/notif-check -> cek pesan errornya
+- Pastikan package name di Firebase = com.emakbet.app
+- Pastikan GOOGLE_SERVICES_JSON di GitHub isinya benar
+
+
+==================================================
+  FITUR YANG SUDAH MASUK (sama persis TOKO123)
+==================================================
+✅ Notif TANPA BATAS (mau 10 atau 10.000 device, semua terkirim)
+✅ Total Download = device yang BENERAN install APK
+✅ Uninstall terdeteksi akurat (cuma yang beneran hapus APK)
+✅ Notif dimatikan user TIDAK dianggap uninstall
+✅ Server sibuk / internet putus TIDAK dianggap uninstall
+✅ Dashboard 3 card: Total Download, Online, Offline
+✅ Chart mulai rendah, naik seiring data
+✅ Filter Hari Ini (per jam) / 7 / 14 / 30 hari
+✅ Login TOTP + auto-logout 10 menit
+✅ Icon notif BERWARNA di status bar (trik tiktok)
+✅ Pull-to-refresh dimatikan (scroll gak refresh)
+
+
+==================================================
+  CATATAN PENTING
+==================================================
+1. Angka dashboard update saat KIRIM NOTIF.
+   Android gak lapor ke server pas user uninstall.
+   Jadi kirim notif rutin biar data selalu segar.
+
+2. SELALU buka file pakai NOTEPAD sebelum copy.
+   Copy dari browser sering bikin file rusak.
+
+3. Cek baris pertama & terakhir setelah paste:
+   - Java  : baris 1 = package com.emakbet.app;
+   - XML   : baris 1 = <?xml version="1.0"...
+   - Worker: baris terakhir = }
+
+4. Kalau worker error "HTTP 407" = file kepotong saat paste.
+   Ulangi dari Notepad, pastikan baris terakhir = }
+
+
+==================================================
+  SirX — EMAKBET
+==================================================
