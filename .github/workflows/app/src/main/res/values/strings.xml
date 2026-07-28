@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EmakBet</string>
+
+    <!-- Dipakai layout splash (activity_main.xml) -->
+    <string name="loading">MEMUAT</string>
+    <string name="splash_tagline">EMAKBET · PASTI JP</string>
+</resources>
