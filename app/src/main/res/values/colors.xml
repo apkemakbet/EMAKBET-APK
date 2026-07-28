@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="green_primary">#1a7a3d</color>
+    <color name="green_dark">#0a1a14</color>
+    <color name="green_neon">#2ff3d0</color>
+
+    <!-- Dipakai layout splash (activity_main.xml) -->
+    <!-- Sama dengan android:windowBackground di styles.xml biar gak ada kedip putih -->
+    <color name="splash_bg">#0a1a14</color>
+    <color name="splash_hint">#6f8f83</color>
+    <color name="notif_accent">#2ff3d0</color>
+</resources>
